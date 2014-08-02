@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 typedef unsigned char u8;
 struct pixel{
@@ -12,7 +13,7 @@ public:
 
 struct bitmap{
 private:
-  pixel** pixels;
+  std::vector<std::vector<pixel>> pixels;
   size_t width;
   size_t height;
 public:
