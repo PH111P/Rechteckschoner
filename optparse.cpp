@@ -242,7 +242,7 @@ bool Options::isSet(const String& p_opt)
 }
 
 
-#ifdef _DEBUG
+
 void Options::dump_options()
 {
     OptionMap::const_iterator it;
@@ -274,7 +274,6 @@ void Options::dump_options()
     printf("\n");
     
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -311,36 +310,39 @@ bool Options::_validLongOpt(const String& p_arg)
 
 int Options::_defaultHelpCallback(const String& p_short, const String& p_long, const String& p_desc, int flags)
 {
-	String buf;
-
-	if (!p_short.empty())
-	{
-		buf.append(p_short);
-		buf.append(" ");
-		if (flags & OPT_NEEDARG)
-			buf.append("arg");
-	}
-
-	if (!p_long.empty())
-	{
-		if (buf.size() > 0)
-			buf.append(", ");
-
-		buf.append(p_long);
-		if (flags & OPT_NEEDARG)
-			buf.append("=arg");
-	}
-
-	buf.append("\t\t");
-	buf.append(p_desc);
-
-	printf("\n%s", buf.c_str());
-
-	return E_OK;
+  if(flags & OPT_REQUIRED)
+    printf("\x1b[1m");
+  if (!p_short.empty()) {
+    if (flags & OPT_NEEDARG)
+      printf("\x1b[37m%4s\x1b[36m arg\x1b[39m",p_short.c_str());
+    else
+      printf("%8s",p_short.c_str());
+  }
+  else
+    printf("        ");
+  if (!p_long.empty()) {
+    if(!p_short.empty())
+      printf(", ");
+    else
+      printf("  ");
+    if (flags & OPT_NEEDARG)
+      printf("\x1b[37m%10s\x1b[39m=\x1b[36marg\x1b[39m ",p_long.c_str());
+    else
+      printf("%14s ",p_long.c_str());
+  }
+  else
+    printf("               ");
+  printf(p_desc.c_str());
+  
+  if(flags & OPT_REQUIRED)
+    printf("\x1b[0m");
+  printf("\n");
+  return E_OK;
 }
 
 int Options::_generateHelp()
 {
+  printf("Rechteckschoner: a tool to gererate randomized pics with reectangles,\nCopyright (c) 2014 Philip Wellnitz\n\n");
 	std::vector<_option*>::const_iterator it = m_orderedOpts.begin(), end = m_orderedOpts.end();
 
 	help_callback callback = ( m_helpCallback ) ? m_helpCallback : (help_callback)_defaultHelpCallback;
@@ -365,9 +367,8 @@ int Options::_handleShortOption(const String& p_str)
 		// See if it's a help option
 		if ( opt->m_flags & OPT_HELP )
 		{
-			//TODO: Possibility of completely exiting if help is encountered. 
 			_generateHelp();
-			return E_OK;
+			return E_EXIT;
 		}
 
 		if ( ++opt->m_count > 1 && !(opt->m_flags & OPT_MULTI) )
@@ -432,7 +433,7 @@ int Options::_handleLongOption(const String& p_str)
 	{
 		//TODO: Possibility of completely exiting if help is encountered. 
 		_generateHelp();
-		return E_OK;
+		return E_EXIT;
 	}
 
     if ( (opt->m_flags & OPT_NEEDARG) && str_arg.empty() )
@@ -613,6 +614,8 @@ int Parser::parse(int p_argc, TCHAR** p_argv, Options& p_opt)
     for ( ; i < p_argc; ++i )
     {
    		retcode |= p_opt._processArg( p_argv[i] );
+		if(retcode & E_EXIT)
+		  return E_EXIT;
     }
     
     return (retcode | p_opt._validateState());

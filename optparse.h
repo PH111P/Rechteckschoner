@@ -68,6 +68,7 @@
 #define E_ARG_INVALID		32 	///< Argument was not validated
 #define E_INVALID 		64  	///< Invalid parameter given to function
 #define E_OPT_TMO		128	///< Too many occurences of this switch
+#define E_EXIT			256	///< Exit
  
 #define CB_OPT_UNKNOWN	1		///< An unknown switch has been found on the commandline
 #define CB_OPT_MALFORMED 2		///< Malformed option: either it has an argument that wasn't expected
@@ -161,9 +162,7 @@ public:
 	 */
 	void reset();
     
-	#ifdef _DEBUG
 	void dump_options();
-	#endif
 
 private:
 
@@ -256,8 +255,9 @@ private:
 	/**
 	 * This is called when a OPT_HELP type option is encountered
 	 */
+public:
 	int _generateHelp();
-	
+private:
 	//! Returns an error code reflecting the state of the option parser
 	int _validateState();
   

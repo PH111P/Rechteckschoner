@@ -27,6 +27,7 @@
 #include <vector>
 #include <algorithm>
 
+
 #include "rectangle.h"
 
 int rectangle::getX() const { return this->posx; }
@@ -51,9 +52,13 @@ void rectangle::draw( bitmap* res ) const {
   
 }
   
-int rectangle::writeTmp(const char* path) {
-  return -1;
+int rectangle::writeTmp(FILE* tmp) {
+  fprintf(tmp,"%d %d %d %d %lu ", this->getX(), this->getY(),
+	  this->getWidth(), this->getHeight(), this->children.size());
+  for(auto i : this->children)
+    i->writeTmp(tmp);
+  return 0;
 }
-int rectangle::readTmp(const char* path, int regenTreePos) {
+int rectangle::readTmp(FILE* tmp, int regenTreePos) {
   return -1;
 }

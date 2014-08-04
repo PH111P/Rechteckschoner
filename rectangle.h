@@ -46,12 +46,13 @@ public:
   int getWidth () const;
   int getHeight () const;
   
+  rectangle() {}
   rectangle(int posX, int posY, int rectWidth, int rectHeight, int maxChildren)
     : posx(posX), posy(posY), width(rectWidth), height(rectHeight), numChildren(maxChildren) { }
   
   void construct(int depth);
   void draw( bitmap* res ) const;
   
-  int writeTmp(const char* path);
-  int readTmp(const char* path, int regenTreePos = -1);
+  int writeTmp(FILE* tmp);
+  int readTmp(FILE* tmp, int regenTreePos = -1);
 };
