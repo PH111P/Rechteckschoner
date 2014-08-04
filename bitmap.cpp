@@ -1,7 +1,32 @@
+//
+// Copyright (c) 2014 Philip Wellnitz
+// Using libpng
+//
+
+//
+// This file is part of "Rechteckschoner".
+//
+// "Rechteckschoner" is distributed to be useful, but need not
+// to be. Further it is distributed WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or 
+// FITNESS FOR A PARTICULAR PURPOSE.
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+
 #include <cstdio>
 #include <cstdlib>
 
-#include <png.h> //libpng
+#include <png.h>
 
 #include "bitmap.h"
 
@@ -11,24 +36,24 @@ bitmap::bitmap(size_t width, size_t height){
   this->pixels = std::vector<std::vector<pixel>>(width, std::vector<pixel>(height,{0,0,0}));
 }
 
-pixel& bitmap::operator()(int x, int y){
-  if(x < 0 || x >= this.width || y < 0 || y >= this.height) {
-    std::fprintf(stderr, "Index out of range while trying to get pixel at (%d|%d)!\nReturning default pixel value instead.",x,x);
+pixel& bitmap::operator()(size_t x, size_t y){
+  if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
+    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,x);
     static pixel defPixel = {0,0,0};
     return defPixel;
   }    
   return this->pixels[x][y];
 }
-pixel bitmap::operator()(int x, int y) const {
-  if(x < 0 || x >= this.width || y < 0 || y >= this.height) {
-    std::fprintf(stderr, "Index out of range while trying to get pixel at (%d|%d)!\nReturning default pixel value instead.",x,x);
+pixel bitmap::operator()(size_t x, size_t y) const {
+  if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
+    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,x);
     static pixel defPixel = {0,0,0};
     return defPixel;
   }    
   return this->pixels[x][y];
 }
  
-int writeToFile(const char* path) const {
+int bitmap::writeToFile(const char* path) const {
    FILE* fd;
    png_structp pngPtr = NULL;
    png_infop infoPtr = NULL;
@@ -80,12 +105,12 @@ int writeToFile(const char* path) const {
    
    //Initialize rows of png
    
-   rowPointers = png_malloc(pngPtr, this->height * sizeof(png_byte*));
+   rowPointers = (png_byte**)png_malloc(pngPtr, this->height * sizeof(png_bytep));
    for(y = 0; y< this->height; ++y) {
-     png_byte* row = png_malloc(pngPtr, sizeof(u8) * this->width * pixelSize);
+     png_byte* row = (png_byte*)png_malloc(pngPtr, this->width * pixelSize);
      rowPointers[y] = row;
      for(x = 0; x < this->width; ++x) {
-       auto px = this(x,y);
+       auto px = this->operator()(x,y);
        *row++ = px.red;
        *row++ = px.green;
        *row++ = px.blue;
@@ -106,7 +131,7 @@ int writeToFile(const char* path) const {
    
 PNG_FAILURE:
 PNG_CREATE_INFO_STRUCT_FAILED:
-   png_destroy_write_struct(&pngPtr,&inoPtr);
+   png_destroy_write_struct(&pngPtr,&infoPtr);
 PNG_CREATE_WRITE_STRUCT_FAILED:
    fclose(fd);
 FOPEN_FAILED:

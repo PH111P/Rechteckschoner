@@ -22,36 +22,38 @@
 // in all copies or substantial portions of the Software.
 //
 
-#pragma once
-#include <vector>
 #include <cstdio>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
-struct bitmap;
+#include "rectangle.h"
 
-class rectangle {
-private:
-  int posx,		//x position of the top-left corner
-      posy,		//y position of the top-left corner
-      width,		//rectangle's width
-      height;		//rectangle's height
+int rectangle::getX() const { return this->posx; }
+int rectangle::getY() const { return this->posy; }
+int rectangle::getWidth() const { return this->width; }
+int rectangle::getHeight() const { return this->height; }
+
+void rectangle::construct(int depth) {
+  if(depth == 0)
+    return;
   
-  int numChildren;	//number of max enclosed rectangles
+  int ccnt = this->children.size();
+  std::vector<float> splitPoses;
+  for(int i = 1; i < ccnt; ++i)
+    splitPoses.push_back(rand() *1.0f / RAND_MAX);
   
-  std::vector<rectangle*> children;
-public:
-  static int DistanceBetweenRectangles;
+  std::sort(splitPoses.begin(), splitPoses.end());
   
-  int getX () const;
-  int getY () const;
-  int getWidth () const;
-  int getHeight () const;
   
-  rectangle(int posX, int posY, int rectWidth, int rectHeight, int maxChildren)
-    : posx(posX), posy(posY), width(rectWidth), height(rectHeight), numChildren(maxChildren) { }
+}
+void rectangle::draw( bitmap* res ) const {
   
-  void construct(int depth);
-  void draw( bitmap* res ) const;
+}
   
-  int writeTmp(const char* path);
-  int readTmp(const char* path, int regenTreePos = -1);
-};
+int rectangle::writeTmp(const char* path) {
+  return -1;
+}
+int rectangle::readTmp(const char* path, int regenTreePos) {
+  return -1;
+}
