@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 		return width > 0;		
 	      });
   o.addOption("-d","--depth",
-	      "specify the maximum recursion depth (default: infinity)",
+	      "specify the maximum recursion depth (default: infinity, ignored when tmp is specified)",
 	      OPT_NEEDARG, [](const String& str){
 		maxDepth = strtol( str.c_str(), NULL, 10 );
 		return maxDepth > 0;		
@@ -115,20 +115,27 @@ int main(int argc, char* argv[]) {
   }
   
   if(tmpFile) {
-    
-  }  
+    fscanf(tmpFile,"%d %d\n");
+    root = rectangle::readTmp(tmpFile);    
+  } else {
+    root = rectangle(0,0,height,width);
+    root.construct(depDepth);
+  }
   std::string output(outputPath);
   FILE* tmpWrtFile = fopen((output + ".tmp").c_str(),"w");
   if(tmpWrtFile){
+    fprintf(tmpWrtFile,"%d %d\n", width, height);
     root.writeTmp(tmpWrtFile);
     fclose(tmpWrtFile);
   }
   else {
-    
+    fprintf(stderr,"Failed to open %s for writing the tmp file.\n", (output + ".tmp").c_str());  
+    return -1;
   }
   bitmap btm(width,height);
-  root.draw(&btm);
-  btm.writeToFile((output + "rechteckschoner.png").c_str());
-
+  if(root.draw(&btm) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
+    fprintf(stderr,"Failed to create/ write .png file.\n");  
+    return -1;
+  }
   return 0;
 }

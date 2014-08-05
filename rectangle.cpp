@@ -35,30 +35,48 @@ int rectangle::getY() const { return this->posy; }
 int rectangle::getWidth() const { return this->width; }
 int rectangle::getHeight() const { return this->height; }
 
-void rectangle::construct(int depth) {
+void rectangle::construct(int ccnt,int depth) {
   if(depth == 0)
     return;
   
-  int ccnt = this->children.size();
+  this->children.clear();
   std::vector<float> splitPoses;
   for(int i = 1; i < ccnt; ++i)
     splitPoses.push_back(rand() *1.0f / RAND_MAX);
   
   std::sort(splitPoses.begin(), splitPoses.end());
   
+  bool hsplit = rand() % 2; //split horizontally?
   
+  int px = this->posx, py = this->posy;
+  int wd = hsplit ? this->width - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
+      this->width - 2 * rectangle::DistanceBetweenRectangles;
+  int hg = !hsplit ? this->height - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
+      this->height - 2 * rectangle::DistanceBetweenRectangles;
+      
+  for(int i = 0; i < ccnt; ++i){
+    this->children.add(
+  }
 }
 void rectangle::draw( bitmap* res ) const {
   
 }
   
-int rectangle::writeTmp(FILE* tmp) {
-  fprintf(tmp,"%d %d %d %d %lu ", this->getX(), this->getY(),
-	  this->getWidth(), this->getHeight(), this->children.size());
+int rectangle::writeTmp(FILE* tmp, int height, int width) {
+  fprintf(tmp,"%lf %lf %lf %lf %lu ", this->getX() * 1.0 / width, this->getY() * 1.0 / height,
+	  this->getWidth() * 1.0 / width, this->getHeight() * 1.0 / height, this->children.size());
   for(auto i : this->children)
-    i->writeTmp(tmp);
+    i->writeTmp(tmp, height, width);
   return 0;
 }
-int rectangle::readTmp(FILE* tmp, int regenTreePos) {
-  return -1;
+static rectangle rectangle::readTmp(FILE* tmp,int width, int height, int maxChildren, int& regenTreePos) {
+  double px,py, wd,hg;
+  size_t ccnt;
+  fscanf(tmp,"%lf %lf %lf %lf %lu",&px,&py, %wd,&hg, &ccnt);
+  
+  rectangle ret((int)(px * width),(int)(py * height),(int)(wd * width), (int)(hg * height));
+  for(auto i = 0; i< ccnt; ++i){
+    rectangle child = rectangle::readTmp(tmp, width,height, maxChildren- 1, --regenTreePos);
+    ret.children.add(
+  }
 }

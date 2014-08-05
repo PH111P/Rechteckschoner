@@ -37,8 +37,8 @@ private:
   
   int numChildren;	//number of max enclosed rectangles
   
-  std::vector<rectangle*> children;
 public:
+  std::vector<rectangle> children;
   static int DistanceBetweenRectangles;
   
   int getX () const;
@@ -50,9 +50,9 @@ public:
   rectangle(int posX, int posY, int rectWidth, int rectHeight, int maxChildren)
     : posx(posX), posy(posY), width(rectWidth), height(rectHeight), numChildren(maxChildren) { }
   
-  void construct(int depth);
+  void construct(int children,int depth);
   void draw( bitmap* res ) const;
   
   int writeTmp(FILE* tmp);
-  int readTmp(FILE* tmp, int regenTreePos = -1);
+  static rectangle readTmp(FILE* tmp,int width, int height,int maxChildren, int& regenTreePos);
 };
