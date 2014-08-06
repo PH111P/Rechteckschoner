@@ -6,7 +6,7 @@
 // This file is part of "Rechteckschoner".
 //
 // "Rechteckschoner" is distributed to be useful, but need not
-// to be. Further it is distributed WITHOUT ANY WARRANTY;
+// to be. Further, it is distributed WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or 
 // FITNESS FOR A PARTICULAR PURPOSE.
 //
