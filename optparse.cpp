@@ -3,12 +3,6 @@
 //
 
 //
-// Modifications: Copyright (c) 2014 Philip Wellnitz
-//
-// N/A
-//
-
-//
 // This file is part of "Rechteckschoner".
 //
 // "Rechteckschoner" is distributed to be useful, but need not

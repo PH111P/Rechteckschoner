@@ -37,7 +37,7 @@
 #include "rectangle.h"
 
 
-long int width, height, maxDepth = -1,
+long int width, height, maxDepth = 10,
 distBetweenRectangles = 10, children = 2;
 FILE* tmpFile;
 const char* outputPath = "./";
@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   Options o;
   o.addOption("","--help", "show this help and exit", OPT_HELP, NULL);
   o.addOption("-v","--version", "(ignored)", OPT_NONE, NULL);
+  o.addOption("-r","--read", "(ignored)",OPT_NONE,NULL);
   o.addOption("-h","--height",
 	      "specify the height (in px) of the output (required)",
 	      OPT_REQUIRED | OPT_NEEDARG, [](const String& str){
@@ -61,7 +62,7 @@ int main(int argc, char* argv[]) {
 		return width > 0;		
 	      });
   o.addOption("-d","--depth",
-	      "specify the maximum recursion depth (default: infinity, ignored when tmp is specified)",
+	      "specify the maximum recursion depth (default: 10)",
 	      OPT_NEEDARG, [](const String& str){
 		maxDepth = strtol( str.c_str(), NULL, 10 );
 		return maxDepth > 0;		
@@ -115,16 +116,19 @@ int main(int argc, char* argv[]) {
   }
   
   if(tmpFile) {
-    fscanf(tmpFile,"%d %d\n");
-    root = rectangle::readTmp(tmpFile);    
+    long int oc;
+    int npos = rand() % (children << maxDepth);
+    fscanf(tmpFile,"%*d %*d %ld %*d\n", &oc);
+    root = readTmp(tmpFile,oc, children,maxDepth,npos); 
+    fclose(tmpFile);
   } else {
-    root = rectangle(0,0,height,width);
-    root.construct(depDepth);
+    root = rectangle(rand() % 2);
+    root.construct(children, maxDepth);
   }
   std::string output(outputPath);
   FILE* tmpWrtFile = fopen((output + ".tmp").c_str(),"w");
   if(tmpWrtFile){
-    fprintf(tmpWrtFile,"%d %d\n", width, height);
+    fprintf(tmpWrtFile,"%ld %ld %ld %ld \n", width, height, children, distBetweenRectangles);
     root.writeTmp(tmpWrtFile);
     fclose(tmpWrtFile);
   }
@@ -133,7 +137,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   bitmap btm(width,height);
-  if(root.draw(&btm) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
+  if(root.draw(&btm, 0,0, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
     fprintf(stderr,"Failed to create/ write .png file.\n");  
     return -1;
   }

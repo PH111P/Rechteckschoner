@@ -26,57 +26,67 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-
+#include <queue>
+#include <map>
 
 #include "rectangle.h"
 
-int rectangle::getX() const { return this->posx; }
-int rectangle::getY() const { return this->posy; }
-int rectangle::getWidth() const { return this->width; }
-int rectangle::getHeight() const { return this->height; }
-
 void rectangle::construct(int ccnt,int depth) {
+  this->children.clear();
   if(depth == 0)
     return;
   
-  this->children.clear();
   std::vector<float> splitPoses;
+  splitPoses.push_back(0);
   for(int i = 1; i < ccnt; ++i)
-    splitPoses.push_back(rand() *1.0f / RAND_MAX);
-  
+    splitPoses.push_back(rand() *1.0f / RAND_MAX);  
   std::sort(splitPoses.begin(), splitPoses.end());
   
-  bool hsplit = rand() % 2; //split horizontally?
-  
-  int px = this->posx, py = this->posy;
-  int wd = hsplit ? this->width - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
-      this->width - 2 * rectangle::DistanceBetweenRectangles;
-  int hg = !hsplit ? this->height - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
-      this->height - 2 * rectangle::DistanceBetweenRectangles;
-      
   for(int i = 0; i < ccnt; ++i){
-    this->children.add(
+    rectangle c1(rand() %2);
+    c1.construct(ccnt,depth - 1);
+    this->children.push_back(std::pair<float, rectangle>(splitPoses[i],c1));
   }
 }
-void rectangle::draw( bitmap* res ) const {
-  
+int rectangle::draw( bitmap* res,int posx, int posy,int width, int height, int between) const {
+//   std::vector<float> splitPoses;
+//   for(int i = 1; i < ccnt; ++i)
+//     splitPoses.push_back(rand() *1.0f / RAND_MAX);  
+//   std::sort(splitPoses.begin(), splitPoses.end());
+//   
+//   int px = this->posx, py = this->posy;
+//   int wd = hsplit ? this->width - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
+//       this->width - 2 * rectangle::DistanceBetweenRectangles;
+//   int hg = !hsplit ? this->height - (ccnt + 1) * rectangle::DistanceBetweenRectangles : 
+//       this->height - 2 * rectangle::DistanceBetweenRectangles;
+//       
+  return 1;
 }
   
-int rectangle::writeTmp(FILE* tmp, int height, int width) {
-  fprintf(tmp,"%lf %lf %lf %lf %lu ", this->getX() * 1.0 / width, this->getY() * 1.0 / height,
-	  this->getWidth() * 1.0 / width, this->getHeight() * 1.0 / height, this->children.size());
+int rectangle::writeTmp(FILE* tmp) {
+  fprintf(tmp,"%i %lu", this->isHorizontal(), this->children.size());
+  for(auto i = 0; i < this->children.size(); ++i)
+    fprintf(tmp, "%f ", this->children[i].first);
   for(auto i : this->children)
-    i->writeTmp(tmp, height, width);
+    i.second.writeTmp(tmp);
   return 0;
 }
-static rectangle rectangle::readTmp(FILE* tmp,int width, int height, int maxChildren, int& regenTreePos) {
-  double px,py, wd,hg;
+rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& regenTreePos) {
+  bool b; 
   size_t ccnt;
-  fscanf(tmp,"%lf %lf %lf %lf %lu",&px,&py, %wd,&hg, &ccnt);
-  
-  rectangle ret((int)(px * width),(int)(py * height),(int)(wd * width), (int)(hg * height));
-  for(auto i = 0; i< ccnt; ++i){
-    rectangle child = rectangle::readTmp(tmp, width,height, maxChildren- 1, --regenTreePos);
-    ret.children.add(
+  fscanf(tmp,"%i %lu",&b,&ccnt);
+  rectangle ret(b);
+  std::vector<float> splitPoses;
+  splitPoses.assign(ccnt,0);
+  for(int i = 0; i< ccnt;++i)
+    fscanf(tmp, "%f", &splitPoses[i]);
+  for(int i = 0; i< ccnt; ++i){
+    rectangle c = readTmp(tmp, maxChildren, nMaxChildren, depth-1, --regenTreePos);
+    if(regenTreePos == 0) {
+      c.construct(nMaxChildren, depth - 1);      
+      regenTreePos = -1;
+    }
+    ret.children.push_back(std::pair<float,rectangle>(splitPoses[i], c));    
   }
+  return ret;
 }

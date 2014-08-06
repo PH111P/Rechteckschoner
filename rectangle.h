@@ -30,29 +30,20 @@ struct bitmap;
 
 class rectangle {
 private:
-  int posx,		//x position of the top-left corner
-      posy,		//y position of the top-left corner
-      width,		//rectangle's width
-      height;		//rectangle's height
-  
-  int numChildren;	//number of max enclosed rectangles
-  
+  bool horizontal; //Determines whether the rectangle's children are positioned
+		    //horizontally next to each other
 public:
-  std::vector<rectangle> children;
-  static int DistanceBetweenRectangles;
+  std::vector<std::pair<float,rectangle>> children;
   
-  int getX () const;
-  int getY () const;
-  int getWidth () const;
-  int getHeight () const;
+  bool isHorizontal() { return horizontal; }
   
   rectangle() {}
-  rectangle(int posX, int posY, int rectWidth, int rectHeight, int maxChildren)
-    : posx(posX), posy(posY), width(rectWidth), height(rectHeight), numChildren(maxChildren) { }
+  rectangle(bool hrz)
+    : horizontal(hrz) { }
   
   void construct(int children,int depth);
-  void draw( bitmap* res ) const;
+  int draw( bitmap* res, int posx, int posy, int width, int height, int between ) const;
   
   int writeTmp(FILE* tmp);
-  static rectangle readTmp(FILE* tmp,int width, int height,int maxChildren, int& regenTreePos);
 };
+rectangle readTmp(FILE* tmp, int oldChildren, int children, int depth, int& regenTreePos);
