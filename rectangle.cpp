@@ -86,12 +86,14 @@ int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t h
 }
   
 int rectangle::writeTmp(FILE* tmp) {
-  fprintf(tmp,"%hhu %lu", this->isHorizontal(), this->children.size());
+  fprintf(tmp,"%hhu %lu ", this->isHorizontal(), this->children.size());
   for(size_t i = 0; i < this->children.size(); ++i)
     fprintf(tmp, "%f ", this->children[i].first);
+  fprintf(tmp,"\n");
+  int ret = 0;
   for(auto i : this->children)
-    i.second.writeTmp(tmp);
-  return 0;
+    ret += i.second.writeTmp(tmp);
+  return ret;
 }
 rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& regenTreePos) {
   u8 b; 
