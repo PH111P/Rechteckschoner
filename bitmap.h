@@ -31,6 +31,8 @@ public:
   u8 red;
   u8 green;
   u8 blue;
+  pixel(u8 r, u8 g, u8 b)
+    : red(r), green(g), blue(b) { }
 };
 
 #define SCALE(x, mx) (((x) < 0) ? 0 : ((int)(256.0*((double)(x)/(double)(mx)))))
@@ -38,9 +40,9 @@ public:
 struct bitmap{
 private:
   std::vector<std::vector<pixel>> pixels;
+public:
   size_t width;
   size_t height;
-public:
   bitmap(size_t width, size_t height);
   
   pixel& operator()(size_t x, size_t y);

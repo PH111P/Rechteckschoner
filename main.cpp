@@ -37,7 +37,7 @@
 #include "rectangle.h"
 
 
-long int width, height, maxDepth = 10,
+size_t width, height, maxDepth = 10,
 distBetweenRectangles = 10, children = 2;
 FILE* tmpFile;
 const char* outputPath = "./";
@@ -137,7 +137,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   bitmap btm(width,height);
-  if(root.draw(&btm, 0,0, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
+  /*
+  printf("%d %d\n",btm.width,btm.height);
+  return 0;*/
+  if(root.draw(&btm, 0lu,0lu, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
     fprintf(stderr,"Failed to create/ write .png file.\n");  
     return -1;
   }

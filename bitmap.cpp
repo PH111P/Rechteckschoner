@@ -38,7 +38,7 @@ bitmap::bitmap(size_t width, size_t height){
 
 pixel& bitmap::operator()(size_t x, size_t y){
   if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
-    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,x);
+    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,y);
     static pixel defPixel = {0,0,0};
     return defPixel;
   }    
@@ -46,7 +46,7 @@ pixel& bitmap::operator()(size_t x, size_t y){
 }
 pixel bitmap::operator()(size_t x, size_t y) const {
   if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
-    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,x);
+    std::fprintf(stderr, "Index out of range while trying to get pixel at (%lu|%lu)!\nReturning default pixel value instead.",x,y);
     static pixel defPixel = {0,0,0};
     return defPixel;
   }    

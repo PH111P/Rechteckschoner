@@ -26,23 +26,24 @@
 #include <vector>
 #include <cstdio>
 
+typedef unsigned char u8;
 struct bitmap;
 
 class rectangle {
 private:
-  bool horizontal; //Determines whether the rectangle's children are positioned
+  u8 horizontal; //Determines whether the rectangle's children are positioned
 		    //horizontally next to each other
 public:
   std::vector<std::pair<float,rectangle>> children;
   
-  bool isHorizontal() { return horizontal; }
+  u8 isHorizontal() { return horizontal; }
   
   rectangle() {}
-  rectangle(bool hrz)
+  rectangle(u8 hrz)
     : horizontal(hrz) { }
   
   void construct(int children,int depth);
-  int draw( bitmap* res, int posx, int posy, int width, int height, int between ) const;
+  int draw( bitmap* res, size_t posx, size_t posy, size_t width, size_t height, size_t between ) const;
   
   int writeTmp(FILE* tmp);
 };
