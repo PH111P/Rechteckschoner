@@ -41,7 +41,6 @@
 // - Unicode handling: help displaying.
 //
 // TODO:
-// [ -- ] Parameter defaults and optional arguments for longopts ? --short[=default]
 // [ -- ] Allow one-of type of switches, i.e. require either -y or -n
 // [ -- ] Allow groups of switches in which all options are requested (perhaps 
 //        same as above, but with an option to specify AND instead of OR
@@ -105,9 +104,8 @@ void Options::setHelpCallback( help_callback p_callback ) { m_helpCallback = p_c
 //
 // Add new option to the Options object
 //
-int Options::addOption(const String& p_short, const String& p_long,
-                       const String& p_help, int p_flags, 
-                       option_validator p_validator) {
+int basicChecks(const String& p_short, const String& p_long,
+		int p_flags, Options::option_validator p_validator) {
   if ( p_short.empty() && p_long.empty() )
     return E_INVALID;
   
@@ -120,17 +118,10 @@ int Options::addOption(const String& p_short, const String& p_long,
   if ( (p_flags & OPT_MULTI) && (p_flags & OPT_NEEDARG) )
     // Not allowing multiple occurences and arguments at this time.
     return E_INVALID;
-  
-  //
-  // TODO: Option name validators, i.e. only '-'char is valid for short opts and -- 
-  // something for long
-  //
-  
-  _option* ptr = new (std::nothrow) _option(p_short, p_long, p_help, 
-						p_flags, p_validator);
-    
-  if (!ptr) return E_ERROR;
-    
+  return E_OK;
+}
+
+int Options::checkOption(const String& p_short, const String& p_long, _option* ptr) {
   bool accepted 	= false;
   bool duplicate 	= false;
     
@@ -157,6 +148,38 @@ int Options::addOption(const String& p_short, const String& p_long,
   else
     m_orderedOpts.push_back(ptr);
   return (duplicate) ? E_OPT_DUPLICATE : E_OK ;
+}
+
+int Options::addOption(const String& p_short, const String& p_long,
+                       const String& p_help,  const String& p_default,
+		       int p_flags,           option_validator p_validator) {
+  if(p_default == "NONE")
+    return addOption(p_short, p_long, p_help, p_flags, p_validator);
+  
+  int err = basicChecks(p_short,p_long,p_flags,p_validator);  
+  if(err)                          
+    return err;
+  if(!(p_flags & OPT_NEEDARG) || p_flags & OPT_REQUIRED)
+    return E_INVALID;
+  
+  _option* ptr = new (std::nothrow) _option(p_short, p_long, p_help, 
+					p_default, p_flags, p_validator);
+  if (!ptr) return E_ERROR;
+  
+  return checkOption(p_short, p_long, ptr);
+}
+
+int Options::addOption(const String& p_short, const String& p_long,
+                       const String& p_help, int p_flags, 
+                       option_validator p_validator) {  
+  basicChecks(p_short,p_long,p_flags,p_validator);
+  
+  _option* ptr = new (std::nothrow) _option(p_short, p_long, p_help, 
+						p_flags, p_validator);
+    
+  if (!ptr) return E_ERROR;
+  
+  return checkOption(p_short, p_long, ptr);
 }
 
 //
@@ -194,6 +217,7 @@ void Options::dump_options() {
     printf("\n\tValid   : %d", p->m_validArg);
     printf("\n\tOptValid: %p", p->m_optionValidator);
     printf("\n\tHelp    : %s", p->m_help.c_str());
+    printf("\n\tDefault : %s", p->m_default.c_str());
     printf("\n");  
   }
   printf("\nFree arguments: "); 
@@ -229,13 +253,15 @@ bool Options::_validLongOpt(const String& p_arg) {
   return ( p_arg.size() >= 3 && p_arg[0] == _T('-') && p_arg[1] == _T('-') && IS_ALPHA(p_arg[2]) );
 }
 
-int Options::_defaultHelpCallback(const String& p_short, const String& p_long, const String& p_desc, int flags) {
+int Options::_defaultHelpCallback(const String& p_short, const String& p_long, const String& p_desc,const String& p_default, int flags) {
   if(flags & OPT_REQUIRED)
     printf("\x1b[1m");
   if (!p_short.empty()) {
-    if (flags & OPT_NEEDARG)
+    if (flags & OPT_NEEDARG) {
       printf("\x1b[37m%4s\x1b[36m arg\x1b[39m",p_short.c_str());
-    else
+      if(p_default != "NONE")
+	printf("[=%3s]",p_default.c_str());
+    } else
       printf("%8s",p_short.c_str());
   }
   else
@@ -245,13 +271,19 @@ int Options::_defaultHelpCallback(const String& p_short, const String& p_long, c
       printf(", ");
     else
       printf("  ");
-    if (flags & OPT_NEEDARG)
-      printf("\x1b[37m%10s\x1b[39m=\x1b[36marg\x1b[39m ",p_long.c_str());
-    else
+    if (flags & OPT_NEEDARG) {
+      printf("\x1b[37m%10s\x1b[39m=\x1b[36marg\x1b[39m ",p_long.c_str());      
+      if(p_default != "NONE")
+	printf("[=%s]",p_default.c_str());
+    } else
       printf("%14s ",p_long.c_str());
   }
-  else
-    printf("                 ");
+  else {
+    if(p_default != "NONE")
+      printf("           ");
+    else
+      printf("                 ");
+  }
   printf(p_desc.c_str());
   
   if(flags & OPT_REQUIRED)
@@ -260,13 +292,12 @@ int Options::_defaultHelpCallback(const String& p_short, const String& p_long, c
   return E_OK;
 }
 
-int Options::_generateHelp() {
+int Options::generateHelp() {
   printf("Rechteckschoner: a tool to gererate randomized pics with reectangles,\nCopyright (c) 2014 Philip Wellnitz\n\n");
-  std::vector<_option*>::const_iterator it = m_orderedOpts.begin(), end = m_orderedOpts.end();
   help_callback callback = ( m_helpCallback ) ? m_helpCallback : (help_callback)_defaultHelpCallback;
 
-  for ( ; it != end; ++it )
-    callback( (*it)->m_shortName, (*it)->m_longName, (*it)->m_help, (*it)->m_flags );
+  for (auto& it : m_orderedOpts)
+    callback( it->m_shortName, it->m_longName, it->m_help, it->m_default, it->m_flags );
   return E_OK;
 }
 
@@ -278,7 +309,7 @@ int Options::_handleShortOption(const String& p_str) {
   if ( opt != NULL ) {
     // See if it's a help option
     if ( opt->m_flags & OPT_HELP ) {
-      _generateHelp();
+      generateHelp();
       return E_EXIT;      
     }
     if ( ++opt->m_count > 1 && !(opt->m_flags & OPT_MULTI) )
@@ -327,7 +358,7 @@ int Options::_handleLongOption(const String& p_str) {
     return E_OPT_UNKNOWN;  
   }
   if ( opt->m_flags & OPT_HELP ) {
-    _generateHelp();
+    generateHelp();
     return E_EXIT;
   }
 
@@ -371,6 +402,11 @@ int Options::_validateState() {
 
       retcode |= E_OPT_MISSING;
       break;
+    }
+    else if ( opt->m_count == 0 && opt->m_default != "NONE") {
+      // Option with default arg didn't occure so check the default arg
+      this->_processArg(opt->m_shortName);
+      this->_processArg(opt->m_default);
     }
     
     if ( opt->m_count == 1 && !opt->m_validArg ) {
@@ -461,7 +497,7 @@ int Parser::parse(int p_argc, TCHAR** p_argv, Options& p_opt) {
   int retcode = E_OK;
 
   // Include argv[0] if specified. It will be the first free arg
-  int i = ( m_flags & OPT_PARSE_INCLUDE_ARGV0 ) ? 0 : 1;
+  int i = !( m_flags & OPT_PARSE_INCLUDE_ARGV0 );
   for ( ; i < p_argc; ++i ) {
     retcode |= p_opt._processArg( p_argv[i] );
     if(retcode & E_EXIT)

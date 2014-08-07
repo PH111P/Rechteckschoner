@@ -108,7 +108,7 @@ public:
   //! Callback used to impose constraints on options
   typedef bool (*option_validator)(const String&);
   typedef int  (*generic_callback)(int, const String&);	///< Generic callback type
-  typedef int  (*help_callback)(const String&, const String&, const String&, int);
+  typedef int  (*help_callback)(const String&, const String&, const String&, const String&, int);
 
   Options();
   ~Options();
@@ -125,7 +125,22 @@ public:
    * @return E_OK if everything went ok
    */
   int addOption(const String& p_short, const String& p_long, const String& p_help, int p_flags, option_validator p_validator = NULL);
-    
+   
+  /**
+   * @param p_short String describing the short form of this option, e.g "-s"
+   * @param p_long String describing the long form of this option, e.g. "--start"
+   * @param p_help Documentation for this parameter, e.g. "Start the server"
+   * @param p_default Default argument for this parameter (OPT_NEEDARG has to be set)
+   * @param p_flags Flags for this option
+   * @param p_validator Callback used to validate the value of the argument (NULL if no validation required or no argument for this opt)
+   * @return E_ERROR when there was a failure allocating memory
+   * @return E_INVALID if both option strings are empty or the option was given a validator even if not needed
+   * @return E_OPT_DUPLICATE if there was another option by this name
+   * @return E_OK if everything went ok
+   */
+  int addOption(const String& p_short, const String& p_long, const String& p_help, const String& p_default, int p_flags, option_validator p_validator = NULL);
+   
+  
   /**
    * @param p_opt String containing the option whose argument is to be retrieved
    * @return Argument given on the commandline to the requested option
@@ -167,15 +182,22 @@ private:
     
   //! Internal structure for keeping option settings
   struct _option {
-    _option(const String& p_short,
-	    const String& p_long,
-	    const String& p_help,
-	    int p_flags,
+    _option(const String& p_short,  const String& p_long,
+	    const String& p_help,   int p_flags,
 	    option_validator p_option)
     : m_count(0), m_validArg(true), m_flags(p_flags)
     , m_help(p_help), m_shortName(p_short), m_longName(p_long)
     , m_optionValidator(p_option) {
+      m_default = "NONE";
     }
+    
+    _option(const String& p_short,  const String& p_long,
+	    const String& p_help,   const String& p_default,
+	    int p_flags,	    option_validator p_option)
+    : m_count(0), m_validArg(true), m_flags(p_flags)
+    , m_help(p_help), m_shortName(p_short), m_longName(p_long)
+    , m_default(p_default), m_optionValidator(p_option) { }
+    
     int m_count;			///< How many times this has been found
 
     //
@@ -188,7 +210,10 @@ private:
     String m_help;      		///< Help description for this option
     String m_shortName;			///< Short option name
     String m_longName;			///< Long option name
+    String m_default;			///< Default value
     option_validator m_optionValidator; ///< Callback for validating options
+    
+    bool hasDefault() { return m_default != "NONE"; }
   };
   
   typedef std::map<String, _option*> OptionMap;
@@ -230,14 +255,17 @@ private:
   // Functions
   ////////////////////////////////////////////////////////////////////
   
-  static int _defaultHelpCallback(const String&, const String&, const String&, int flags);
+  static int _defaultHelpCallback(const String&, const String&, const String&, const String&, int flags);
   
   /**
    * This is called when a OPT_HELP type option is encountered
    */
 public:
-  int _generateHelp();
+  int generateHelp();
 private:
+  
+  int checkOption(const String& p_short, const String& p_long, _option* ptr);
+  
   //! Returns an error code reflecting the state of the option parser
   int _validateState();
   

@@ -62,25 +62,25 @@ int main(int argc, char* argv[]) {
 		return width > 0;		
 	      });
   o.addOption("-d","",
-	      "specify the maximum recursion depth (default: 10)",
+	      "specify the maximum recursion depth", "10",
 	      OPT_NEEDARG, [](const String& str){
 		maxDepth = strtol( str.c_str(), NULL, 10 );
 		return maxDepth > 0;		
 	      });
   o.addOption("-b","",
-	      "specify the distace between rectangles (default: 10px)",
+	      "specify the distace between rectangles", "10",
 	      OPT_NEEDARG, [](const String& str){
 		distBetweenRectangles = strtol( str.c_str(), NULL, 10 );
 		return distBetweenRectangles > 0;		
 	      });
   o.addOption("-c","",
-	      "specify the max number of children a rectangle may have in the tree (default: 2)",
+	      "specify the max number of children a rectangle may have in the tree","2",
 	      OPT_NEEDARG, [](const String& str){
 		children = strtol( str.c_str(), NULL, 10 );
 		return children > 0;		
 	      });
   o.addOption("-o","",
-	      "path to the (input) output folder (default: ./)",
+	      "path to the (input) output folder", "./",
 	      OPT_NEEDARG, NULL);
   o.addOption("-t","",
 	      "name of a previously generated temporary file (default: none, create a new one)",
@@ -90,9 +90,6 @@ int main(int argc, char* argv[]) {
 	      });
   
   Parser p;
-  children = 2;
-  distBetweenRectangles = 10;
-  maxDepth = 10;
   int result = p.parse(argc, argv, o);
   
   if( result == E_OK ) {
@@ -120,7 +117,7 @@ int main(int argc, char* argv[]) {
     bitmap btm(width,height);
     
     printf("%d %d %d\n",btm.width,btm.height, maxDepth);
-    
+    return 0;
     if(root.draw(&btm, 0lu,0lu, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
       fprintf(stderr,"Failed to create/ write .png file.\n");  
       return -1;
@@ -143,7 +140,7 @@ int main(int argc, char* argv[]) {
       fprintf(stderr,"---- ARGUMENT EXPECTED ----\n");
     if ( result & E_ARG_INVALID )
       fprintf(stderr,"---- ARGUMENT NOT VALID ----\n");
-    o._generateHelp();
+    o.generateHelp();
     return -1;
   }
 }
