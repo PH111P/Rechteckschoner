@@ -49,23 +49,44 @@ void rectangle::construct(int ccnt,int depth) {
     this->children.push_back(std::pair<float, rectangle>(splitPoses[i],c1));
   }
 }
-int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t height, size_t between) const {
+int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t height, size_t between) {
+//   printf("Drawing a rectangle to %lu [%lu], %lu [%lu]\n",posx,posy,width,height);
+  if(!height || !width) {
+    return 0;
+  }
   int ret = 0;
+  
+  auto ccnt = this->children.size();
+  
+  u8 r = children.empty() ? 256 : u8(this->children[0].first * 255);
+  u8 g = children.empty() ? 256 : u8(this->children[1 % ccnt].first * 255);
+  u8 b = children.empty() ? 256 : u8(this->children[2 % ccnt].first * 255);
+  
   for(size_t x = posx; x < posx + width; ++x)
     (*res)(x,posy) = (*res)(x, posy + 1) 
 		= (*res)(x, posy + height - 2) 
 		= (*res)(x, posy + height - 1)
-		= pixel(128,128,128);
+		= pixel(r,g,b);
   for(size_t y = posy; y < posy + height; ++y)
     (*res)(posx,y) = (*res)(posx + 1, y)
 		= (*res)(posx + width - 1, y)
 		= (*res)(posx + width - 2, y)
-		= pixel(128,128,128);
+		= pixel(r,g,b);
 
-  size_t wd = this->horizontal ? width - (this->children.size() + 1) * between : 
+  int wd = this->horizontal ? width - (this->children.size() + 1) * between : 
       width - 2 * between;
-  size_t hg = !this->horizontal ? height - (this->children.size() + 1) * between : 
+  int hg = !this->horizontal ? height - (this->children.size() + 1) * between : 
       height - 2 * between;
+  if(wd <= 0 || hg <= 0) {
+    wd = !this->horizontal ? width - (this->children.size() + 1) * between : 
+      width - 2 * between;
+    hg = this->horizontal ? height - (this->children.size() + 1) * between : 
+      height - 2 * between;
+      
+    if(wd <= 0 || hg <= 0)
+      return 0;
+    this->horizontal = !this->horizontal;
+  }
   if(this->horizontal)
     posy += between;
   else
@@ -73,13 +94,15 @@ int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t h
   for(auto i : this->children) 
     if(this->horizontal) {
       posx += between;
-      ret += i.second.draw(res,posx,posy,size_t(i.first * wd), hg, between);
+      ret += i.second.draw(res,posx,posy,size_t(i.first * wd), size_t(hg), between);
       posx += size_t( i.first * wd);
+      wd -= size_t( i.first * wd);
     }
     else {
       posy += between;
-      ret += i.second.draw(res,posx,posy, wd, size_t(i.first * hg), between);
+      ret += i.second.draw(res,posx,posy, size_t(wd), size_t(i.first * hg), between);
       posy += size_t( i.first * hg);
+      hg -= size_t(i.first * hg);
     }
   
   return ret;
@@ -96,6 +119,8 @@ int rectangle::writeTmp(FILE* tmp) {
   return ret;
 }
 rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& regenTreePos) {
+  printf("At tree pos %d ", regenTreePos);
+  
   u8 b; 
   size_t ccnt;
   fscanf(tmp,"%hhu %lu",&b,&ccnt);
@@ -106,9 +131,10 @@ rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& 
     fscanf(tmp, "%f", &splitPoses[i]);
   for(size_t i = 0; i< ccnt; ++i){
     rectangle c = readTmp(tmp, maxChildren, nMaxChildren, depth-1, --regenTreePos);
-    if(regenTreePos == 0) {
+    if(regenTreePos <= 0) {
+      printf("\x1b[35;42mReconstructing\x1b[39;49m");
       c.construct(nMaxChildren, depth - 1);      
-      regenTreePos = -1;
+      regenTreePos = (1<<30);
     }
     ret.children.push_back(std::pair<float,rectangle>(splitPoses[i], c));    
   }

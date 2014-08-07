@@ -40,7 +40,7 @@
 size_t width, height, maxDepth,
 distBetweenRectangles, children;
 FILE* tmpFile;
-const char* outputPath = "./";
+char* outputPath = NULL;
 
 rectangle root;
 
@@ -81,7 +81,11 @@ int main(int argc, char* argv[]) {
 	      });
   o.addOption("-o","",
 	      "path to the (input) output folder", "./",
-	      OPT_NEEDARG, NULL);
+	      OPT_NEEDARG, [](const String& str){
+		outputPath = new char[str.length() + 2];
+		strcpy(outputPath,str.c_str());
+		return true;
+	      });
   o.addOption("-t","",
 	      "name of a previously generated temporary file (default: none, create a new one)",
 	      OPT_NEEDARG, [](const String& str) {
@@ -92,10 +96,13 @@ int main(int argc, char* argv[]) {
   Parser p;
   int result = p.parse(argc, argv, o);
   
+  srand(time(0));
+  
   if( result == E_OK ) {
     if(tmpFile) {
       long int oc;
-      int npos = rand() % (children << maxDepth);
+      int npos = 1 + rand() % (children << (maxDepth/2));
+      printf("Regen tree at pos %d\n",npos);
       fscanf(tmpFile,"%*d %*d %ld %*d\n", &oc);
       root = readTmp(tmpFile,oc, children,maxDepth,npos); 
       fclose(tmpFile);
@@ -117,7 +124,7 @@ int main(int argc, char* argv[]) {
     bitmap btm(width,height);
     
     printf("%d %d %d\n",btm.width,btm.height, maxDepth);
-    return 0;
+    
     if(root.draw(&btm, 0lu,0lu, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
       fprintf(stderr,"Failed to create/ write .png file.\n");  
       return -1;

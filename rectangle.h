@@ -43,7 +43,7 @@ public:
     : horizontal(hrz) { }
   
   void construct(int children,int depth);
-  int draw( bitmap* res, size_t posx, size_t posy, size_t width, size_t height, size_t between ) const;
+  int draw( bitmap* res, size_t posx, size_t posy, size_t width, size_t height, size_t between );
   
   int writeTmp(FILE* tmp);
 };
