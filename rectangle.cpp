@@ -34,6 +34,7 @@
 
 void rectangle::construct(int ccnt,int depth) {
   this->children.clear();
+  this->isnew = true;
   if(depth == 0)
     return;
   
@@ -51,16 +52,17 @@ void rectangle::construct(int ccnt,int depth) {
 }
 int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t height, size_t between) {
 //   printf("Drawing a rectangle to %lu [%lu], %lu [%lu]\n",posx,posy,width,height);
-  if(!height || !width) {
+  if(!height || !width)
     return 0;
-  }
   int ret = 0;
   
   auto ccnt = this->children.size();
   
-  u8 r = children.empty() ? 256 : u8(this->children[0].first * 255);
-  u8 g = children.empty() ? 256 : u8(this->children[1 % ccnt].first * 255);
-  u8 b = children.empty() ? 256 : u8(this->children[2 % ccnt].first * 255);
+  int mx = this->isNew() ? 255 : 128;
+  
+  u8 r = children.empty() ? mx : u8(this->children[0].first * mx);
+  u8 g = children.empty() ? mx : u8(this->children[1 % ccnt].first * mx);
+  u8 b = children.empty() ? mx : u8(this->children[2 % ccnt].first * mx);
   
   for(size_t x = posx; x < posx + width; ++x)
     (*res)(x,posy) = (*res)(x, posy + 1) 
@@ -118,9 +120,7 @@ int rectangle::writeTmp(FILE* tmp) {
     ret += i.second.writeTmp(tmp);
   return ret;
 }
-rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& regenTreePos) {
-  printf("At tree pos %d ", regenTreePos);
-  
+rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int ndepth, int npos) {  
   u8 b; 
   size_t ccnt;
   fscanf(tmp,"%hhu %lu",&b,&ccnt);
@@ -130,11 +130,11 @@ rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int& 
   for(size_t i = 0; i< ccnt;++i)
     fscanf(tmp, "%f", &splitPoses[i]);
   for(size_t i = 0; i< ccnt; ++i){
-    rectangle c = readTmp(tmp, maxChildren, nMaxChildren, depth-1, --regenTreePos);
-    if(regenTreePos <= 0) {
-      printf("\x1b[35;42mReconstructing\x1b[39;49m");
-      c.construct(nMaxChildren, depth - 1);      
-      regenTreePos = (1<<30);
+    rectangle c = readTmp(tmp, maxChildren, nMaxChildren, depth-1, ndepth - 1, npos);
+    if(ndepth == 0 && (npos % ccnt) == i){
+      ++ndepth;
+      ++npos;
+      c.construct(nMaxChildren, depth - 1);
     }
     ret.children.push_back(std::pair<float,rectangle>(splitPoses[i], c));    
   }

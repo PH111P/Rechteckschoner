@@ -100,11 +100,12 @@ int main(int argc, char* argv[]) {
   
   if( result == E_OK ) {
     if(tmpFile) {
-      long int oc;
-      int npos = 1 + rand() % (children << (maxDepth/2));
-      printf("Regen tree at pos %d\n",npos);
-      fscanf(tmpFile,"%*d %*d %ld %*d\n", &oc);
-      root = readTmp(tmpFile,oc, children,maxDepth,npos); 
+      size_t oc;
+      fscanf(tmpFile,"%*u %*u %lu %*u\n", &oc);
+      
+      int ndepth = rand() % (maxDepth - 3);
+      int pos = rand() % std::max(oc,children);
+      root = readTmp(tmpFile,oc, children,maxDepth,ndepth,pos); 
       fclose(tmpFile);
     } else {
       root = rectangle(rand() % 2);
@@ -113,7 +114,7 @@ int main(int argc, char* argv[]) {
     std::string output(outputPath);
     FILE* tmpWrtFile = fopen((output + ".tmp").c_str(),"w");
     if(tmpWrtFile){
-      fprintf(tmpWrtFile,"%ld %ld %ld %ld \n", width, height, children, distBetweenRectangles);
+      fprintf(tmpWrtFile,"%lu %lu %lu %lu \n", width, height, children, distBetweenRectangles);
       root.writeTmp(tmpWrtFile);
       fclose(tmpWrtFile);
     }
@@ -122,8 +123,6 @@ int main(int argc, char* argv[]) {
       return -1;
     }
     bitmap btm(width,height);
-    
-    printf("%d %d %d\n",btm.width,btm.height, maxDepth);
     
     if(root.draw(&btm, 0lu,0lu, width, height, distBetweenRectangles) || btm.writeToFile((output + "rechteckschoner.png").c_str())) {
       fprintf(stderr,"Failed to create/ write .png file.\n");  
