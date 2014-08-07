@@ -59,6 +59,8 @@ int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t h
   auto ccnt = this->children.size();
   
   int mx = this->isNew() ? 255 : 128;
+  if(!highlight)
+    mx = 200;
   
   u8 r = children.empty() ? mx : u8(this->children[0].first * mx);
   u8 g = children.empty() ? mx : u8(this->children[1 % ccnt].first * mx);

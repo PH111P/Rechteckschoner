@@ -29,6 +29,8 @@
 typedef unsigned char u8;
 struct bitmap;
 
+extern bool highlight;
+
 class rectangle {
 private:
   u8 horizontal; //Determines whether the rectangle's children are positioned

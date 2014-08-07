@@ -41,6 +41,7 @@ size_t width, height, maxDepth,
 distBetweenRectangles, children;
 FILE* tmpFile;
 char* outputPath = NULL;
+bool highlight;
 
 rectangle root;
 
@@ -48,7 +49,8 @@ int main(int argc, char* argv[]) {
   Options o;
   o.addOption("","--help", "show this help and exit", OPT_HELP, NULL);
   o.addOption("-v","--version", "(ignored)", OPT_NONE, NULL);
-  o.addOption("-r","--read", "(ignored)",OPT_NONE,NULL);
+  o.addOption("-r","--read", "don't change any rectangle",OPT_NONE,NULL);
+  o.addOption("-i","--highlight", "highlight changed rectangles",OPT_NONE,NULL);
   o.addOption("-h","",
 	      "specify the height (in px) of the output (required)",
 	      OPT_REQUIRED | OPT_NEEDARG, [](const String& str){
@@ -99,12 +101,15 @@ int main(int argc, char* argv[]) {
   srand(time(0));
   
   if( result == E_OK ) {
+    highlight = o.isSet("-i");
+    bool read = o.isSet("-r");
+    
     if(tmpFile) {
       size_t oc;
       fscanf(tmpFile,"%*u %*u %lu %*u\n", &oc);
       
-      int ndepth = rand() % (maxDepth - 3);
-      int pos = rand() % std::max(oc,children);
+      int ndepth = read ? -1 : (rand() % (maxDepth - 3));
+      int pos = read ? -1 : (rand() % std::max(oc,children));
       root = readTmp(tmpFile,oc, children,maxDepth,ndepth,pos); 
       fclose(tmpFile);
     } else {
