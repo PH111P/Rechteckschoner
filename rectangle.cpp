@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 Philip Wellnitz
+// Copyright ( c ) 2014 Philip Wellnitz
 //
 
 //
@@ -11,9 +11,9 @@
 // FITNESS FOR A PARTICULAR PURPOSE.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
+// a copy of this software and associated documentation files ( the
+// "Software" ), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish, 
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
@@ -32,113 +32,145 @@
 #include "rectangle.h"
 #include "bitmap.h"
 
-void rectangle::construct(int ccnt,int depth) {
-  this->children.clear();
-  this->isnew = true;
-  if(depth == 0)
+///////////////////////////////////////////////////////////////////////////////
+//
+// Rectangle
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Rectangle - PUBLIC functions
+///////////////////////////////////////////////////////////////////////////////
+
+//
+// Construct the rectangle tree.
+//
+void rectangle::construct( int p_children, int p_depth ) {
+  this->m_children.clear(  );
+  this->m_isNew = true;
+  if ( p_depth == 0 )
     return;
   
   std::vector<float> splitPoses;
-  for(int i = 1; i < ccnt; ++i)
-    splitPoses.push_back(rand() *1.0f / RAND_MAX); 
-  splitPoses.push_back(1); 
-  std::sort(splitPoses.begin(), splitPoses.end());
+  for ( int i = 1; i < p_children; ++i )
+    splitPoses.push_back( rand(  ) * 1.0f / RAND_MAX ); 
+  splitPoses.push_back( 1 ); 
   
-  for(int i = 0; i < ccnt; ++i){
-    rectangle c1(rand() %2);
-    c1.construct(ccnt,depth - 1);
-    this->children.push_back(std::pair<float, rectangle>(splitPoses[i],c1));
+  std::sort( splitPoses.begin(  ), splitPoses.end(  ) );
+  
+  for ( int i = 0; i < p_children; ++i ) {
+    rectangle c1( rand(  ) % 2 );
+    c1.construct( p_children, p_depth - 1 );
+    this->m_children.push_back( std::pair<float, rectangle>( splitPoses[i], c1 ) );
   }
 }
-int rectangle::draw( bitmap* res,size_t posx, size_t posy,size_t width, size_t height, size_t between) {
-//   printf("Drawing a rectangle to %lu [%lu], %lu [%lu]\n",posx,posy,width,height);
-  if(!height || !width)
+
+//
+// Draw the rectangle tree to the p_result bitmap
+//
+int rectangle::draw( bitmap* p_result, size_t p_positionX, size_t p_positionY, size_t p_width, size_t p_height, size_t p_between ) {
+  if ( !p_height || !p_width )
     return 0;
   int ret = 0;
   
-  auto ccnt = this->children.size();
+  auto children = this->m_children.size(  );
   
-  int mx = this->isNew() ? 255 : 160;
-  if(!highlight)
+  int mx = this->isNew(  ) ? 255 : 160;
+  if ( !highlight )
     mx = 230;
   
-  u8 r = children.empty() ? mx : u8(this->children[0].first * mx);
-  u8 g = children.empty() ? mx : u8(this->children[1 % ccnt].first * mx);
-  u8 b = children.empty() ? mx : u8(this->children[2 % ccnt].first * mx);
+  u8 r = m_children.empty(  ) ? mx : u8( this->m_children[0].first * mx );
+  u8 g = m_children.empty(  ) ? mx : u8( this->m_children[1 % children].first * mx );
+  u8 b = m_children.empty(  ) ? mx : u8( this->m_children[2 % children].first * mx );
   
-  for(size_t x = posx; x < posx + width; ++x)
-    (*res)(x,posy) = (*res)(x, posy + 1) 
-		= (*res)(x, posy + height - 2) 
-		= (*res)(x, posy + height - 1)
-		= pixel(r,g,b);
-  for(size_t y = posy; y < posy + height; ++y)
-    (*res)(posx,y) = (*res)(posx + 1, y)
-		= (*res)(posx + width - 1, y)
-		= (*res)(posx + width - 2, y)
-		= pixel(r,g,b);
+  for ( size_t x = p_positionX; x < p_positionX + p_width; ++x )
+    ( *p_result )( x, p_positionY ) = ( *p_result )( x, p_positionY + 1 ) 
+		= ( *p_result )( x, p_positionY + p_height - 2 ) 
+		= ( *p_result )( x, p_positionY + p_height - 1 )
+		= pixel( r, g, b );
+  for ( size_t y = p_positionY; y < p_positionY + p_height; ++y )
+    ( *p_result )( p_positionX, y ) = ( *p_result )( p_positionX + 1, y )
+		= ( *p_result )( p_positionX + p_width - 1, y )
+		= ( *p_result )( p_positionX + p_width - 2, y )
+		= pixel( r, g, b );
 
-  int wd = this->horizontal ? width - (this->children.size() + 1) * between : 
-      width - 2 * between;
-  int hg = !this->horizontal ? height - (this->children.size() + 1) * between : 
-      height - 2 * between;
-  if(wd <= 0 || hg <= 0) {
-    wd = !this->horizontal ? width - (this->children.size() + 1) * between : 
-      width - 2 * between;
-    hg = this->horizontal ? height - (this->children.size() + 1) * between : 
-      height - 2 * between;
+  int actualWidth = this->m_horizontal ? p_width - ( this->m_children.size(  ) + 1 ) * p_between : 
+      p_width - 2 * p_between;
+  int actualHeight = !this->m_horizontal ? p_height - ( this->m_children.size(  ) + 1 ) * p_between : 
+      p_height - 2 * p_between;
       
-    if(wd <= 0 || hg <= 0)
+  if ( actualWidth <= 0 || actualHeight <= 0 ) {
+    actualWidth = !this->m_horizontal ? p_width - ( this->m_children.size(  ) + 1 ) * p_between : 
+      p_width - 2 * p_between;
+    actualHeight = this->m_horizontal ? p_height - ( this->m_children.size(  ) + 1 ) * p_between : 
+      p_height - 2 * p_between;
+      
+    if ( actualWidth <= 0 || actualHeight <= 0 )
       return 0;
-    this->horizontal = !this->horizontal;
+    this->m_horizontal = !this->m_horizontal;
   }
-  if(this->horizontal)
-    posy += between;
+  
+  if ( this->m_horizontal )
+    p_positionY += p_between;
   else
-    posx += between;
-  for(auto i : this->children) 
-    if(this->horizontal) {
-      posx += between;
-      ret += i.second.draw(res,posx,posy,size_t(i.first * wd), size_t(hg), between);
-      posx += size_t( i.first * wd);
-      wd -= size_t( i.first * wd);
-    }
-    else {
-      posy += between;
-      ret += i.second.draw(res,posx,posy, size_t(wd), size_t(i.first * hg), between);
-      posy += size_t( i.first * hg);
-      hg -= size_t(i.first * hg);
+    p_positionX += p_between;
+  
+  for ( auto i : this->m_children ) 
+    if ( this->m_horizontal ) {
+      p_positionX += p_between;
+      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( i.first * actualWidth ), size_t( actualHeight ), p_between );
+      p_positionX += size_t( i.first * actualWidth );
+      actualWidth -= size_t( i.first * actualWidth );
+    } else {
+      p_positionY += p_between;
+      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( actualWidth ), size_t( i.first * actualHeight ), p_between );
+      p_positionY += size_t( i.first * actualHeight );
+      actualHeight -= size_t( i.first * actualHeight );
     }
   
   return ret;
 }
   
-int rectangle::writeTmp(FILE* tmp) {
-  fprintf(tmp,"%hhu %lu ", this->isHorizontal(), this->children.size());
-  for(size_t i = 0; i < this->children.size(); ++i)
-    fprintf(tmp, "%f ", this->children[i].first);
-  fprintf(tmp,"\n");
+//
+// Write the rectangle tree into a temporary file, preorder
+//
+int rectangle::writeTmp( FILE* p_tmp ) {
+  std::fprintf( p_tmp, "%hhu %lu ", this->isHorizontal(  ), this->m_children.size(  ) );
+  for ( size_t i = 0; i < this->m_children.size(  ); ++i )
+    std::fprintf( p_tmp, "%f ", this->m_children[i].first );
+  std::fprintf( p_tmp, "\n" );
+  
   int ret = 0;
-  for(auto i : this->children)
-    ret += i.second.writeTmp(tmp);
+  for ( auto i : this->m_children )
+    ret += i.second.writeTmp( p_tmp );
   return ret;
 }
-rectangle readTmp(FILE* tmp, int maxChildren, int nMaxChildren, int depth, int ndepth, int npos) {  
-  u8 b; 
-  size_t ccnt;
-  fscanf(tmp,"%hhu %lu",&b,&ccnt);
-  rectangle ret(b);
+
+//
+// Read a rectangle tree from a temporary file
+//
+rectangle readTmp( FILE* p_tmp, int p_oldChildren, int p_children, int p_depth, int p_recreateDepth, int p_recreatePosition ) {  
+  u8 horizontal; 
+  size_t children;
+  
+  // Read whether the act. rectangle aligns its children horizontally, and how much children there are
+  std::fscanf( p_tmp, "%hhu %lu", &horizontal, &children );
+  rectangle ret( horizontal );
+  
   std::vector<float> splitPoses;
-  splitPoses.assign(ccnt,0);
-  for(size_t i = 0; i< ccnt;++i)
-    fscanf(tmp, "%f", &splitPoses[i]);
-  for(size_t i = 0; i< ccnt; ++i){
-    rectangle c = readTmp(tmp, maxChildren, nMaxChildren, depth-1, ndepth - 1, npos);
-    if(ndepth == 0 && (npos % ccnt) == i){
-      ++ndepth;
-      ++npos;
-      c.construct(nMaxChildren, depth - 1);
+  splitPoses.assign( children, 0 );
+  for ( size_t i = 0; i < children; ++i )
+    std::fscanf( p_tmp, "%f", &splitPoses[i] );
+  
+  for ( size_t i = 0; i < children; ++i ) {
+    rectangle c = readTmp( p_tmp, p_oldChildren, p_children, p_depth - 1, p_recreateDepth - 1, p_recreatePosition );
+    
+    if ( p_recreateDepth == 0 && ( p_recreatePosition % children ) == i ) {
+      ++p_recreateDepth;
+      ++p_recreatePosition;
+      c.construct( p_children, p_depth - 1 );
     }
-    ret.children.push_back(std::pair<float,rectangle>(splitPoses[i], c));    
+    ret.m_children.push_back( std::pair<float, rectangle>( splitPoses[i], c ) );    
   }
   return ret;
 }
