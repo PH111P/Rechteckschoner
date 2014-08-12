@@ -7,10 +7,10 @@ feh  --bg-scale '~/Projects/Rechteckschoner/rechteckschoner.png'
 
 while true; do
 	sleep 2s
-	~/Projects/Rechteckschoner/rechteckschoner -w 1366 -h 768 -d 12 -b 3 -c 3 -r -t ~/Projects/Rechteckschoner/.tmp -o  /home/philip/Projects/Rechteckschoner/	#use generated tmp and change only parts
+	~/Projects/Rechteckschoner/rechteckschoner -w 1366 -h 768 -d 12 -b 3 -c 3 -r -t ~/Projects/Rechteckschoner/.tmp -o ~/Projects/Rechteckschoner/	#use generated tmp and change only parts
 	feh  --bg-scale '~/Projects/Rechteckschoner/rechteckschoner.png'
 	
 	sleep 30s
-	~/Projects/Rechteckschoner/rechteckschoner -w 1366 -h 768 -d 12 -b 3 -c 3 -i -t ~/Projects/Rechteckschoner/.tmp -o /home/philip/Projects/Rechteckschoner/	
+	~/Projects/Rechteckschoner/rechteckschoner -w 1366 -h 768 -d 12 -b 3 -c 3 -i -t ~/Projects/Rechteckschoner/.tmp -o ~/Projects/Rechteckschoner/	
 	feh  --bg-scale '~/Projects/Rechteckschoner/rechteckschoner.png'
 done
