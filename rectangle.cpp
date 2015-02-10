@@ -79,9 +79,9 @@ int rectangle::draw( bitmap* p_result, size_t p_positionX, size_t p_positionY, s
   if ( !highlight )
     mx = 230;
   
-  u8 r = m_children.empty(  ) ? mx : u8( this->m_children[0].first * mx );
-  u8 g = m_children.empty(  ) ? mx : u8( this->m_children[1 % children].first * mx );
-  u8 b = m_children.empty(  ) ? mx : u8( this->m_children[2 % children].first * mx );
+  u8 r = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 0 ] % children].first * mx );
+  u8 g = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 1 ] % children].first * mx );
+  u8 b = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 2 ] % children].first * mx );
   
   for ( size_t x = p_positionX; x < p_positionX + p_width; ++x )
     ( *p_result )( x, p_positionY ) = ( *p_result )( x, p_positionY + 1 ) 

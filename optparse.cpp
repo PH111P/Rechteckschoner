@@ -291,7 +291,7 @@ int Options::_defaultHelpCallback( const String& p_short, const String& p_long, 
 }
 
 int Options::generateHelp(  ) {
-  std::printf( "Rechteckschoner: a tool to gererate randomized pics with reectangles, \nCopyright ( c ) 2014 Philip Wellnitz\n\n" );
+  std::printf( "Rechteckschoner: a tool to gererate randomized pics with reectangles, \nCopyright ( c ) 2014, 2015 Philip Wellnitz\n\n" );
   help_callback callback = ( m_helpCallback ) ? m_helpCallback : ( help_callback )_defaultHelpCallback;
 
   for ( auto& it : m_orderedOpts )

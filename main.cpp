@@ -41,7 +41,10 @@ size_t width, height, maxDepth,
 distBetweenRectangles, children;
 FILE* tmpFile;
 char* outputPath = NULL;
+char* loutputPath = NULL;
 bool highlight;
+
+u8 color[ 3 ];
 
 rectangle root;
 
@@ -69,13 +72,31 @@ int main( int p_argc, char* p_argv[] ) {
 		maxDepth = std::strtol( str.c_str(  ), NULL, 10 );
 		return maxDepth > 0;		
 	      } );
-  o.addOption( "-b", "", 
+   o.addOption( "-b", "", 
 	      "specify the distace between rectangles", "10", 
 	      OPT_NEEDARG, []( const String& str ){
 		distBetweenRectangles = std::strtol( str.c_str(  ), NULL, 10 );
 		return distBetweenRectangles > 0;		
-	      } );
-  o.addOption( "-c", "", 
+	      } ); 
+   o.addOption( "-e", "", 
+	      "specify the red component modifier", "0", 
+	      OPT_NEEDARG, []( const String& str ){
+		color[ 0 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
+		return true;		
+	      } ); 
+   o.addOption( "-g", "", 
+	      "specify the green component modifier", "1", 
+	      OPT_NEEDARG, []( const String& str ){
+		color[ 1 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
+		return true;		
+	      } ); 
+   o.addOption( "-b", "", 
+	      "specify the blue component modifier", "2", 
+	      OPT_NEEDARG, []( const String& str ){
+		color[ 2 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
+		return true;		
+	      } ); 
+   o.addOption( "-c", "", 
 	      "specify the max number of children a rectangle may have in the tree", "2", 
 	      OPT_NEEDARG, []( const String& str ){
 		children = std::strtol( str.c_str(  ), NULL, 10 );
@@ -86,6 +107,13 @@ int main( int p_argc, char* p_argv[] ) {
 	      OPT_NEEDARG, []( const String& str ){
 		outputPath = new char[str.length(  ) + 2];
 		std::strcpy( outputPath, str.c_str(  ) );
+		return true;
+	      } );
+  o.addOption( "-l", "", 
+	      "path to the output folder for copies of the generated png and tmp files", 
+	      OPT_NEEDARG, []( const String& str ){
+		loutputPath = new char[str.length(  ) + 2];
+		std::strcpy( loutputPath, str.c_str(  ) );
 		return true;
 	      } );
   o.addOption( "-t", "", 
@@ -118,8 +146,15 @@ int main( int p_argc, char* p_argv[] ) {
     }
     
     std::string output( outputPath );
+    std::string logOutput = "NONE";
+    if(loutputPath)
+      logOutput = std::string(loutputPath);
     
     FILE* tmpWrtFile = std::fopen( ( output + ".tmp" ).c_str(  ), "w" );
+    FILE* logWrtFile = NULL;
+    if(loutputPath)
+      logWrtFile = std::fopen( ( logOutput + ".tmp" ).c_str(  ), "w" );
+    
     if ( tmpWrtFile ) {
       std::fprintf( tmpWrtFile, "%lu %lu %lu %lu \n", width, height, children, distBetweenRectangles );
       root.writeTmp( tmpWrtFile );
@@ -128,13 +163,21 @@ int main( int p_argc, char* p_argv[] ) {
       std::fprintf( stderr, "Failed to open %s for writing the tmp file.\n", ( output + ".tmp" ).c_str(  ) );  
       return -1;
     }
-    
     bitmap btm( width, height );
     
     if ( root.draw( &btm, 0lu, 0lu, width, height, distBetweenRectangles ) || btm.writeToFile( ( output + "rechteckschoner.png" ).c_str(  ) ) ) {
       std::fprintf( stderr, "Failed to create/ write .png file.\n" );  
       return -1;
     }
+    
+    
+    if ( logWrtFile ) {
+      std::fprintf( logWrtFile, "%lu %lu %lu %lu \n", width, height, children, distBetweenRectangles );
+      root.writeTmp( logWrtFile );
+      std::fclose( logWrtFile );
+      btm.writeToFile( ( logOutput + "rechteckschoner.png" ).c_str(  ) );
+    }
+    
     return 0;
   } else {
     if ( !( result & E_EXIT ) )

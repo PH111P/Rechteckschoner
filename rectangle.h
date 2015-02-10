@@ -31,6 +31,8 @@ struct bitmap;
 
 extern bool highlight;	///< Determines whether changes made to the rectangle tree get highlighted 
 
+extern u8 color[ 3 ]; ///< Colors
+
 class rectangle {
 private:
   u8 m_horizontal; 	///< Determines whether the rectangle's children are positioned horizontally next to each other
