@@ -44,27 +44,31 @@ char* outputPath = NULL;
 char* loutputPath = NULL;
 bool highlight;
 
-u8 color[ 3 ];
+u8 color[ 3 ] = { (u8)128, (u8)128, (u8)255 };
 
 rectangle root;
 
+bool foundH = false, foundW = false;
 int main( int p_argc, char* p_argv[] ) {
   Options o;
+  Parser p;
   o.addOption( "", "--help", "show this help and exit", OPT_HELP, NULL );
   o.addOption( "-v", "--version", "( ignored )", OPT_NONE, NULL );
   o.addOption( "-r", "--read", "don't change any rectangle", OPT_NONE, NULL );
   o.addOption( "-i", "--highlight", "highlight changed rectangles", OPT_NONE, NULL );
   o.addOption( "-h", "", 
 	      "specify the height ( in px ) of the output ( required )", 
-	      OPT_REQUIRED | OPT_NEEDARG, []( const String& str ){
+	      OPT_NEEDARG, []( const String& str ){
 		height = std::strtol( str.c_str(  ), NULL, 10 );
-		return height > 0;		
+            foundH = (height > 0);
+            return height > 0;
 	      } );
   o.addOption( "-w", "", 
 	      "specify the width ( in px ) of the output ( required )", 
-	      OPT_REQUIRED | OPT_NEEDARG, []( const String& str ){
+	      OPT_NEEDARG, []( const String& str ){
 		width = std::strtol( str.c_str(  ), NULL, 10 );
-		return width > 0;		
+		    foundW = (width > 0);
+            return width > 0;
 	      } );
   o.addOption( "-d", "", 
 	      "specify the maximum recursion depth", "10", 
@@ -79,19 +83,19 @@ int main( int p_argc, char* p_argv[] ) {
 		return distBetweenRectangles > 0;		
 	      } ); 
    o.addOption( "-e", "", 
-	      "specify the red component modifier", "0", 
+	      "specify the red component modifier", 
 	      OPT_NEEDARG, []( const String& str ){
 		color[ 0 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
 		return true;		
 	      } ); 
    o.addOption( "-g", "", 
-	      "specify the green component modifier", "1", 
+	      "specify the green component modifier", 
 	      OPT_NEEDARG, []( const String& str ){
 		color[ 1 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
 		return true;		
 	      } ); 
-   o.addOption( "-b", "", 
-	      "specify the blue component modifier", "2", 
+   o.addOption( "-u", "", 
+	      "specify the blue component modifier", 
 	      OPT_NEEDARG, []( const String& str ){
 		color[ 2 ] = (u8)std::strtol( str.c_str(  ), NULL, 10 );
 		return true;		
@@ -109,6 +113,55 @@ int main( int p_argc, char* p_argv[] ) {
 		std::strcpy( outputPath, str.c_str(  ) );
 		return true;
 	      } );
+  o.addOption( "-q", "", 
+	        "path to the config file",
+	        OPT_NEEDARG, []( const String& str ){
+		    
+            FILE *config = fopen( str.c_str(), "r" );
+            if( !config ) {
+                fclose( config );
+                return false;
+            }
+
+            char arg[50];
+            for( ; fscanf( config, "%s", arg ) != EOF; ) { 
+                printf( "%s ", arg );    
+                fflush( stdout );
+                switch( arg[1] ) {
+                case 'h':
+                    foundH = true;
+                    fscanf( config, "%lu", &height );
+              //      printf( "%d, ", height );
+                    break;
+                case 'w':
+                    foundW = true;
+                    fscanf( config, "%lu", &width );
+                    break;
+                case 'd':
+                    fscanf( config, "%lu", &maxDepth );
+                    break;
+                case 'b':
+                    fscanf( config, "%lu", &distBetweenRectangles );
+                    break;
+                case 'c':
+                    fscanf( config, "%lu", &children );
+                    break;
+                case 'e':
+                    fscanf( config, "%hhu", &color[ 0 ] );
+                    printf( "%d,", color[ 0 ] );
+                    break;
+                case 'g':
+                    fscanf( config, "%hhu", &color[ 1 ] );
+                    printf( "%d,", color[ 1 ] );
+                    break;
+                case 'u':
+                    fscanf( config, "%hhu", &color[ 2 ] );
+                    printf( "%d,", color[ 2 ] );
+                    break;
+                };
+            }
+		    return true; 
+	      } );
   o.addOption( "-l", "", 
 	      "path to the output folder for copies of the generated png and tmp files", 
 	      OPT_NEEDARG, []( const String& str ){
@@ -123,12 +176,13 @@ int main( int p_argc, char* p_argv[] ) {
 		return !!tmpFile;
 	      } );
   
-  Parser p;
   int result = p.parse( p_argc, p_argv, o );
   
   srand( time( 0 ) );
-  
-  if ( result == E_OK ) {
+ 
+    printf("Colors %d %d %d\n", color[0],color[1],color[2]);
+
+  if ( result == E_OK && foundH && foundW ) {
     highlight = o.isSet( "-i" );
     bool read = o.isSet( "-r" );
     
@@ -185,7 +239,7 @@ int main( int p_argc, char* p_argv[] ) {
     else
       return 0;
     //Print command line arg possibilities here   
-    if ( result & E_OPT_MISSING )
+    if ( result & E_OPT_MISSING || !foundH || !foundW )
       std::fprintf( stderr, "---- MISSING REQUIRED OPTION ----\n" ); 
     if ( result & E_OPT_UNKNOWN )
       std::fprintf( stderr, "---- UNKNOWN OPTION SPECIFIED ----\n" );    

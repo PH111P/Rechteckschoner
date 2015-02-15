@@ -65,24 +65,31 @@ void rectangle::construct( int p_children, int p_depth ) {
   }
 }
 
+int depth = 10;
+extern size_t maxDepth;
+
 //
 // Draw the rectangle tree to the p_result bitmap
 //
-int rectangle::draw( bitmap* p_result, size_t p_positionX, size_t p_positionY, size_t p_width, size_t p_height, size_t p_between ) {
+int rectangle::draw( bitmap* p_result, size_t p_positionX, size_t p_positionY, size_t p_width, size_t p_height, size_t p_between, int p_depth ) {
   if ( !p_height || !p_width )
     return 0;
+
   int ret = 0;
-  
-  auto children = this->m_children.size(  );
-  
-  int mx = this->isNew(  ) ? 255 : 160;
+  double mx = this->isNew(  ) ? 255.0 : 150.0;
   if ( !highlight )
-    mx = 230;
-  
-  u8 r = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 0 ] % children].first * mx );
-  u8 g = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 1 ] % children].first * mx );
-  u8 b = m_children.empty(  ) ? mx : u8( this->m_children[ color[ 2 ] % children].first * mx );
-  
+    mx = 233.0;
+
+  for( int i = 0; i < 3; ++i )
+      if( !color[ i ] )
+          color[ i ] = 1;
+
+  u8 r = u8( ( mx * p_depth ) / ( color[ 0 ] * ( maxDepth + 10 ) ) );
+  u8 g = u8( ( mx * p_depth ) / ( color[ 1 ] * ( maxDepth + 10 ) ) );
+  u8 b = u8( ( mx * p_depth ) / ( color[ 2 ] * ( maxDepth + 10 ) ) );
+
+  //printf( "%d %d %d\n", r,g,b );
+
   for ( size_t x = p_positionX; x < p_positionX + p_width; ++x )
     ( *p_result )( x, p_positionY ) = ( *p_result )( x, p_positionY + 1 ) 
 		= ( *p_result )( x, p_positionY + p_height - 2 ) 
@@ -118,16 +125,16 @@ int rectangle::draw( bitmap* p_result, size_t p_positionX, size_t p_positionY, s
   for ( auto i : this->m_children ) 
     if ( this->m_horizontal ) {
       p_positionX += p_between;
-      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( i.first * actualWidth ), size_t( actualHeight ), p_between );
+      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( i.first * actualWidth ), size_t( actualHeight ), p_between, p_depth + 1 );
       p_positionX += size_t( i.first * actualWidth );
       actualWidth -= size_t( i.first * actualWidth );
     } else {
       p_positionY += p_between;
-      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( actualWidth ), size_t( i.first * actualHeight ), p_between );
+      ret += i.second.draw( p_result, p_positionX, p_positionY, size_t( actualWidth ), size_t( i.first * actualHeight ), p_between, p_depth + 1 );
       p_positionY += size_t( i.first * actualHeight );
       actualHeight -= size_t( i.first * actualHeight );
     }
-  
+
   return ret;
 }
   

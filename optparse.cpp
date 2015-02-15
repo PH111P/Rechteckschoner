@@ -489,7 +489,7 @@ int Parser::pre_parse( Options& p_opt ) {
 
 void Parser::setFlags( int p_flags ) { m_flags |= p_flags; }
 
-int Parser::parse( int p_argc, TCHAR** p_argv, Options& p_opt ) {
+int Parser::parse( int p_argc, TCHAR** p_argv,Options& p_opt ) {
   pre_parse( p_opt );
   
   int retcode = E_OK;
