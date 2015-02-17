@@ -2,8 +2,8 @@
 
 # Use the script in this file to bring life to your desktop!
 
-/home/philip/Projects/Rechteckschoner/generate_cmds
-/home/philip/Projects/Rechteckschoner/rechteckschoner -c 4 -q /home/philip/Projects/Rechteckschoner/.config -o /home/philip/Projects/Rechteckschoner/ -i			#init call, generate .tmp
+/home/philip/Projects/Rechteckschoner/generate_cmds 
+/home/philip/Projects/Rechteckschoner/rechteckschoner -c 4 -q /home/philip/Projects/Rechteckschoner/.config -o /home/philip/Projects/Rechteckschoner/ -i 		#init call, generate .tmp
 feh  --bg-scale '/home/philip/Projects/Rechteckschoner/rechteckschoner.png'
 
 while true; do
