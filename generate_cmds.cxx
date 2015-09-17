@@ -6,7 +6,7 @@
 
 int depth = 8;
 int border = 3;
-int children = 4;
+int children = 3;
 
 int color[ 3 ] = { 180, 180, 180 };
 
@@ -35,8 +35,8 @@ int main() {
 
     printf( "\n%d. at %d:%d\n",day, hours, minutes );
 
-    children = day / 4;
-    depth = int( day / 2.5 );
+    children = 2 + day % 3;
+    depth = 36 / children;
 
     if( hours >= 6 && hours <= 9 
         || hours >= 16 && hours <= 18 ) {
@@ -61,7 +61,7 @@ int main() {
         color[ 2 ] = 3 * minutes;
 
     printf( "Colors: %d %d %d\n", color[ 0 ], color[ 1 ], color[ 2 ] );
-    fprintf( config," -d %d -b %d -c %d",10,3,4); //depth, border, children );
+    fprintf( config," -d %d -b %d -c %d", depth, border, children );
     fprintf( config," -e %d -g %d -u %d",color[ 0 ], color[ 1 ], color[ 2 ] );
     fclose( config );
 }
