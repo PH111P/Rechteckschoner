@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <ctime>
 
-#define HRES 768
-#define VRES 1366
+#define HRES 1080
+#define VRES 1920
 
 int depth = 8;
-int border = 3;
+int border = 6;
 int children = 3;
 
 int color[ 3 ] = { 180, 180, 180 };
@@ -15,7 +15,7 @@ const char* temp = "/home/philip/Projects/Rechteckschoner/.tmp";
 
 int main() {
     FILE* config = fopen( "/home/philip/Projects/Rechteckschoner/.config", "w" );
-    
+
     if( config == 0 ) {
         printf( "fopen failed\n" );
         perror( ".config" );
@@ -23,7 +23,7 @@ int main() {
         return 0;
     }
 
-    fprintf( config, "-h %d", HRES ); 
+    fprintf( config, "-h %d", HRES );
     fprintf( config," -w %d", VRES );
 
     time_t utime = time( 0 );
@@ -38,7 +38,7 @@ int main() {
     children = 2 + day % 3;
     depth = 36 / children;
 
-    if( hours >= 6 && hours <= 9 
+    if( hours >= 6 && hours <= 9
         || hours >= 16 && hours <= 18 ) {
         color[ 0 ] = 1;
     } else if( hours == 5 || hours == 15 )
